@@ -31,11 +31,22 @@ async function run() {
     await client.connect();
 
 const courseCollection=client.db('LearnMate').collection('course')
+const studentCollection=client.db('LearnMate').collection('students')
+// students review post 
+
+
+
+
+app.get('/students', async (req, res) => {
+  const result = await studentCollection.find().toArray();
+  res.send(result);
+});
+
 
 
 // course api 
     app.post('/courses', async (req, res) => {
-      const course = req.body
+      const course = {...req.body , createdAt: new Date()}
       const result = await courseCollection.insertOne(course)
       console.log(result)
       res.send(result)

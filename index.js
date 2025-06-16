@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const cors=require('cors')
 const port = process.env.PORT||3000
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 
 // middleware
@@ -58,6 +58,19 @@ app.get('/courses',async(req,res)=>{
       const result=await courseCollection.find().sort({_id:-1}).limit(6).toArray()
     res.send(result)
 })
+app.get('/courses-find',async(req,res)=>{
+      const result=await courseCollection.find().toArray()
+    res.send(result)
+})
+
+
+app.get('/tutorials/:id',async(req,res)=>{
+  const id=req.params.id
+  const query={_id : new ObjectId(id)}
+  const result=await courseCollection.findOne(query)
+  res.send(result)
+})
+
 
 
 

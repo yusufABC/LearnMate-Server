@@ -32,6 +32,7 @@ async function run() {
 
 const courseCollection=client.db('LearnMate').collection('course')
 const studentCollection=client.db('LearnMate').collection('students')
+const enrollmentCollection = client.db('LearnMate').collection('enrollments');
 // students review post 
 
 
@@ -51,6 +52,42 @@ app.get('/students', async (req, res) => {
       console.log(result)
       res.send(result)
     })
+// enrollment 
+
+    app.post('/courses-enroll',async (req,res)=>{
+      const {courseId,email}=req.body
+      const alreadyEnrolled=await enrollmentCollection.findOne({courseId,email})
+       if (alreadyEnrolled) {
+    return res.status(400).send({ message: 'Already enrolled' });
+  }
+
+  const enrollment={
+    courseId,
+    email,
+  }
+
+    const result = await enrollmentCollection.insertOne(enrollment);
+  res.send(result);
+    })
+// overall course enroll 
+    app.get('/courses-enroll', async (req, res) => {
+  const { courseId, email } = req.query;
+
+  if (!courseId || !email) {
+    return res.status(400).send({ message: 'Missing courseId or email' });
+  }
+
+  const enrolled = await enrollmentCollection.findOne({ courseId, email });
+  res.send({ enrolled: !!enrolled });
+});
+
+// my enrollment 
+
+app.get('/my-enrollments', async (req, res) => {
+  const { email } = req.query;
+  const result = await enrollmentCollection.find({ email }).toArray();
+  res.send(result);
+});
 
 
 
@@ -83,6 +120,26 @@ app.get('/tutorials/:id',async(req,res)=>{
   const query={_id : new ObjectId(id)}
   const result=await courseCollection.findOne(query)
   res.send(result)
+})
+
+app.get('/courses-find/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await courseCollection.findOne(query);
+  res.send(result);
+});
+
+app.put('/courses-find/:id',async(req,res)=>{
+  const id=req.params.id
+  const filter={_id:new ObjectId(id)}
+  const updatedPost=req.body
+  const updatedDoc={
+    $set:updatedPost
+  }
+
+    const result=await courseCollection.updateOne(filter,updatedDoc)
+  res.send(result)
+
 })
 
 

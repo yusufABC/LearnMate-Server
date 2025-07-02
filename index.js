@@ -143,12 +143,43 @@ async function run() {
     });
 
 
-
+// filtered courses 
     app.get('/courses', async (req, res) => {
 
+  try {
+    const latestCourses = await courseCollection
+      .find()
+      .sort({ _id: -1 })
+      .limit(8)
+      .toArray();
 
+    let result = latestCourses;
 
-      const result = await courseCollection.find().sort({ _id: -1 }).limit(6).toArray()
+    if (latestCourses.length < 8) {
+      const latestIds = latestCourses.map((c) =>
+        typeof c._id === 'string' ? new ObjectId(c._id) : c._id
+      );
+
+      const fillCourses = await courseCollection
+        .find({ _id: { $nin: latestIds } })
+        .sort({ _id: 1 }) // oldest first
+        .limit(8 - latestCourses.length)
+        .toArray();
+
+      result = [...latestCourses, ...fillCourses];
+    }
+
+    res.send(result);
+  } catch (err) {
+    console.error("Error loading courses:", err);
+    res.status(500).send({ message: "Server error" });
+  }
+
+    })
+    // over all courses
+    app.get('/courses-all', async (req, res) => {
+
+      const result = await courseCollection.find().toArray()
       res.send(result)
     })
 
